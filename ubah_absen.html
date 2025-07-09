@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Form Absensi</title>
+  <style>
+    :root {
+      --primary: #4CAF50;
+      --danger: #e53935;
+      --gray: #ccc;
+      --dark: #333;
+      --light: #f9f9f9;
+      --radius: 10px;
+      --shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: var(--light);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--dark);
+      margin-bottom: 10px;
+    }
+
+    .info {
+      text-align: center;
+      color: #555;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+
+    input[type="date"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      border: 1px solid var(--gray);
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      font-size: 1rem;
+      font-weight: bold;
+      color: white;
+      background: var(--primary);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: #388e3c;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: #c62828;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+
+    th, td {
+      border: 1px solid var(--gray);
+      padding: 12px;
+      text-align: center;
+    }
+
+    th {
+      background: #f0f0f0;
+    }
+
+    select.alasan-select {
+      display: none;
+      width: 100%;
+      padding: 8px;
+      font-size: 1rem;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 600px) {
+      .btn {
+        width: 100%;
+        font-size: 0.95rem;
+        padding: 10px;
+      }
+
+      input[type="date"] {
+        font-size: 0.95rem;
+      }
+
+      th, td {
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      select.alasan-select {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Form Absensi Siswa</h2>
+    <div class="info" id="profileInfo">Mengambil data profil...</div>
+
+    <form id="absenForm">
+      <input type="date" id="tanggal" required />
+
+      <div class="btn-group">
+        <button type="button" class="btn" onclick="hadirSemua()">Hadir Semua</button>
+        <button type="button" class="btn btn-danger" onclick="tidakHadirSemua()">Tidak Hadir Semua</button>
+        <button type="button" class="btn" onclick="resetSemua()">Reset Semua</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Nama</th>
+              <th>NIS</th>
+              <th>Hadir</th>
+              <th>Tidak Hadir</th>
+              <th>Alasan</th>
+            </tr>
+          </thead>
+          <tbody id="siswaTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="btn-group">
+        <button type="button" class="btn" onclick="simpanAbsensi()">Simpan Absensi</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const siswaData = [
+  { nama: "A", nis: "1" },
+  { nama: "B", nis: "2" },
+  { nama: "C", nis: "3" },
+  { nama: "D", nis: "4" },
+  { nama: "E", nis: "5" },
+  { nama: "F", nis: "6" },
+  { nama: "G", nis: "7" },
+  { nama: "H", nis: "8" },
+  { nama: "I", nis: "9" },
+  { nama: "J", nis: "10" },
+  { nama: "K", nis: "11" },
+  { nama: "L", nis: "12" }
+];
+
+    const tbody = document.getElementById("siswaTableBody");
+
+    siswaData.forEach((siswa, i) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${siswa.nama}</td>
+        <td>${siswa.nis}</td>
+        <td><input type="radio" name="absen-${i}" value="Hadir"></td>
+        <td><input type="radio" name="absen-${i}" value="Tidak Hadir"></td>
+        <td>
+          <select class="alasan-select" data-index="${i}">
+            <option value="Sakit">Sakit</option>
+            <option value="Izin">Izin</option>
+            <option value="Alfa">Alfa</option>
+          </select>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    function hadirSemua() {
+      siswaData.forEach((_, i) => {
+        document.querySelector(`input[name="absen-${i}"][value="Hadir"]`).checked = true;
+        document.querySelector(`.alasan-select[data-index="${i}"]`).style.display = "none";
+      });
+    }
+
+    function tidakHadirSemua() {
+      siswaData.forEach((_, i) => {
+        document.querySelector(`input[name="absen-${i}"][value="Tidak Hadir"]`).checked = true;
+        document.querySelector(`.alasan-select[data-index="${i}"]`).style.display = "block";
+      });
+    }
+
+    function resetSemua() {
+      siswaData.forEach((_, i) => {
+        document.querySelectorAll(`input[name="absen-${i}"]`).forEach(input => input.checked = false);
+        document.querySelector(`.alasan-select[data-index="${i}"]`).style.display = "none";
+      });
+    }
+
+    tbody.addEventListener("change", function(e) {
+      if (e.target.type === "radio") {
+        const index = e.target.name.split("-")[1];
+        const alasan = document.querySelector(`.alasan-select[data-index="${index}"]`);
+        alasan.style.display = e.target.value === "Tidak Hadir" ? "block" : "none";
+      }
+    });
+
+    function simpanAbsensi() {
+  const tanggal = document.getElementById("tanggal").value;
+  if (!tanggal) return alert("Tanggal wajib diisi!");
+
+  const profile = JSON.parse(localStorage.getItem("profile"));
+  if (!profile || !profile.name || !profile.kelas || !profile.pelajaran) {
+    alert("Data profil guru belum lengkap. Silakan lengkapi terlebih dahulu.");
+    return;
+  }
+
+  const data = siswaData.map((siswa, i) => {
+    const radio = document.querySelector(`input[name="absen-${i}"]:checked`);
+    const status = radio ? radio.value : "";
+    const alasan = status === "Tidak Hadir"
+      ? document.querySelector(`.alasan-select[data-index="${i}"]`).value
+      : "";
+    return { nama: siswa.nama, nis: siswa.nis, status, alasan };
+  });
+
+  const semuaTerisi = data.every(d => d.status);
+  if (!semuaTerisi && !confirm("Ada siswa yang belum diisi. Lanjutkan?")) return;
+
+  const absensiList = JSON.parse(localStorage.getItem("absensi")) || [];
+  const index = parseInt(localStorage.getItem("ubahIndex"), 10);
+
+  if (!isNaN(index) && index >= 0 && index < absensiList.length) {
+    // Ganti data lama, bukan menambah
+    absensiList[index] = {
+      tanggal,
+      kelas: profile.kelas,
+      pelajaran: profile.pelajaran,
+      guru: profile.name,
+      absensi: data
+    };
+
+    localStorage.setItem("absensi", JSON.stringify(absensiList));
+    localStorage.removeItem("ubahIndex");
+    alert("Data absensi berhasil diperbarui!");
+    window.location.href = "lihat_absen.html";
+  } else {
+    alert("Gagal memperbarui data. Index tidak ditemukan.");
+  }
+}
+
+    window.onload = () => {
+  document.getElementById("tanggal").value = new Date().toISOString().split("T")[0];
+  const profile = JSON.parse(localStorage.getItem("profile"));
+  const info = document.getElementById("profileInfo");
+  if (profile && profile.name && profile.kelas && profile.pelajaran) {
+    info.innerHTML = `
+      <div><strong>Guru:</strong> ${profile.name}</div>
+      <div><strong>Kelas:</strong> ${profile.kelas}</div>
+      <div><strong>Pelajaran:</strong> ${profile.pelajaran}</div>
+    `;
+  } else {
+    info.innerHTML = `<span style="color: red;">Profil guru belum tersedia. Silakan lengkapi profil di dashboard.</span>`;
+  }
+};
+  </script>
+</body>
+</html>

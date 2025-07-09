@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lihat Absensi</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .info {
+      text-align: center;
+      color: #007bff;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 800px;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      font-size: 14px;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 3px;
+      transition: background 0.3s;
+    }
+
+    .btn-danger { background-color: #e74c3c; }
+    .btn-danger:hover { background-color: #c0392b; }
+
+    .btn-primary { background-color: #3498db; }
+    .btn-primary:hover { background-color: #2980b9; }
+
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    #formatModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    #formatModal div {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      max-width: 90%;
+    }
+
+    @media (max-width: 768px) {
+      h2 {
+        font-size: 20px;
+      }
+
+      table {
+        font-size: 12px;
+      }
+
+      th, td {
+        padding: 6px;
+      }
+
+      .btn {
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+
+      .button-group {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .container {
+        padding: 15px;
+      }
+    }
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>Data Absensi Siswa</h2>
+    <div class="info" id="profileInfo">Memuat data profil...</div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Tanggal</th>
+            <th>Kelas</th>
+            <th>Pelajaran</th>
+            <th>Guru</th>
+            <th>Hadir</th>
+            <th>Tidak Hadir</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="absensiTable"></tbody>
+      </table>
+    </div>
+
+    <div class="button-group">
+      <button class="btn btn-primary" onclick="bukaModalDownload(1, 'UTS')">UTS Semester 1</button>
+      <button class="btn btn-primary" onclick="bukaModalDownload(1, 'UAS')">UAS Semester 1</button>
+      <button class="btn btn-primary" onclick="bukaModalDownload(2, 'UTS')">UTS Semester 2</button>
+      <button class="btn btn-primary" onclick="bukaModalDownload(2, 'UAS')">UAS Semester 2</button>
+      <button class="btn btn-danger" onclick="window.location.href='dashboard.html'">← Kembali</button>
+    </div>
+  </div>
+
+  <div id="formatModal">
+    <div>
+      <h3>Pilih Format Download</h3>
+      <label><input type="radio" name="format" value="pdf" checked> PDF</label>
+      <label style="margin-left:20px;"><input type="radio" name="format" value="excel"> Excel</label><br><br>
+      <button onclick="lanjutDownload()">Download</button>
+      <button onclick="tutupModal()">Batal</button>
+    </div>
+  </div>
+
+  <script>
+  let currentSemester = "";
+  let currentJenis = "";
+
+  function tampilkanProfil() {
+    const profile = JSON.parse(localStorage.getItem("profile")) || { name: "-", kelas: "-", pelajaran: "-" };
+    document.getElementById("profileInfo").innerHTML = `
+      <div><strong>Guru:</strong> ${profile.name}</div>
+      <div><strong>Kelas:</strong> ${profile.kelas}</div>
+      <div><strong>Pelajaran:</strong> ${profile.pelajaran}</div>
+    `;
+  }
+
+  function tampilkanData() {
+    const absensiList = JSON.parse(localStorage.getItem("absensi")) || [];
+    const tbody = document.getElementById("absensiTable");
+    tbody.innerHTML = "";
+    if (absensiList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8">Belum ada data tersimpan.</td></tr>`;
+      return;
+    }
+    absensiList.forEach((item, i) => {
+      const hadir = item.absensi.filter(a => a.status === "Hadir").length;
+      const tidakHadir = item.absensi.length - hadir;
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${item.tanggal}</td>
+        <td>${item.kelas}</td>
+        <td>${item.pelajaran}</td>
+        <td>${item.guru}</td>
+        <td>${hadir}</td>
+        <td>${tidakHadir}</td>
+        <td>
+          <button class="btn btn-danger" onclick="hapus(${i})">Hapus</button>
+          <button class="btn btn-primary" onclick="ubah(${i})">Ubah</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  function hapus(index) {
+    if (!confirm("Yakin ingin menghapus data ini?")) return;
+    let data = JSON.parse(localStorage.getItem("absensi")) || [];
+    data.splice(index, 1);
+    localStorage.setItem("absensi", JSON.stringify(data));
+    tampilkanData();
+  }
+
+  function ubah(index) {
+    localStorage.setItem("ubahIndex", index);
+    window.location.href = "ubah_absen.html";
+  }
+
+  function bukaModalDownload(semester, jenis) {
+    currentSemester = semester;
+    currentJenis = jenis;
+    document.getElementById("formatModal").style.display = "flex";
+  }
+
+  function tutupModal() {
+    document.getElementById("formatModal").style.display = "none";
+  }
+
+  function lanjutDownload() {
+    const format = document.querySelector('input[name="format"]:checked').value;
+    tutupModal();
+    if (format === "pdf") downloadRekapPDF(currentSemester, currentJenis);
+    else downloadRekapExcel(currentSemester, currentJenis);
+  }
+
+  // =========================
+  // ✅ Tambahan Baru di Bawah Ini
+  // =========================
+
+  function filterData(semester, jenis) {
+    const absensi = JSON.parse(localStorage.getItem("absensi")) || [];
+    const bulanFilter = {
+      "1": { UTS: ["10", "11", "12"], UAS: ["01", "02", "03"] },
+      "2": { UTS: ["04", "05", "06"], UAS: ["07", "08", "09"] }
+    };
+    const bulan = bulanFilter[semester][jenis];
+    return absensi.filter(a => bulan.includes(a.tanggal.split("-")[1]));
+  }
+
+  function downloadRekapPDF(semester, jenis) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("l", "mm", "a4");
+
+    const data = filterData(semester, jenis);
+    if (!data.length) return alert("Data tidak ditemukan!");
+
+    const tanggalList = [...new Set(data.map(d => d.tanggal))].sort((a, b) => new Date(a) - new Date(b));
+    const siswaList = [];
+    const siswaSet = new Set();
+
+    data.forEach(d => {
+      d.absensi.forEach(s => {
+        const key = s.nis + "_" + s.nama;
+        if (!siswaSet.has(key)) {
+          siswaSet.add(key);
+          siswaList.push({ nis: s.nis, nama: s.nama });
+        }
+      });
+    });
+
+    const head = [["Nama", "NIS", ...tanggalList, "Total Hadir", "Total Tidak Hadir"]];
+    const body = siswaList.map(s => {
+      let hadirCount = 0;
+      let tidakHadirCount = 0;
+      const row = [s.nama, s.nis];
+      tanggalList.forEach(tgl => {
+        const absData = data.find(d => d.tanggal === tgl);
+        if (absData) {
+          const siswa = absData.absensi.find(x => x.nis === s.nis);
+          if (siswa) {
+            if (siswa.status === "Hadir") {
+              row.push("H");
+              hadirCount++;
+            } else {
+              let alasanCode = "TH";
+              if (siswa.alasan === "Sakit") alasanCode = "S";
+              else if (siswa.alasan === "Izin") alasanCode = "I";
+              else if (siswa.alasan === "Alfa") alasanCode = "A";
+              row.push(alasanCode);
+              tidakHadirCount++;
+            }
+          } else {
+            row.push("");
+          }
+        } else {
+          row.push("");
+        }
+      });
+      row.push(hadirCount);
+      row.push(tidakHadirCount);
+      return row;
+    });
+
+    doc.setFontSize(14);
+    doc.text(`Rekap Absensi ${jenis} Semester ${semester}`, 14, 14);
+    doc.autoTable({
+      startY: 20,
+      head: head,
+      body: body,
+      styles: { fontSize: 9, cellPadding: 2 },
+      headStyles: { fillColor: [0, 123, 255], textColor: 255 },
+      margin: { top: 20 }
+    });
+
+    doc.save(`rekap_${jenis.toLowerCase()}_semester${semester}.pdf`);
+  }
+
+  function downloadRekapExcel(semester, jenis) {
+    const data = filterData(semester, jenis);
+    if (!data.length) return alert("Data tidak ditemukan!");
+
+    const tanggalList = [...new Set(data.map(d => d.tanggal))].sort((a, b) => new Date(a) - new Date(b));
+    const siswaList = [];
+    const siswaSet = new Set();
+
+    data.forEach(d => {
+      d.absensi.forEach(s => {
+        const key = s.nis + "_" + s.nama;
+        if (!siswaSet.has(key)) {
+          siswaSet.add(key);
+          siswaList.push({ nis: s.nis, nama: s.nama });
+        }
+      });
+    });
+
+    const header = ["Nama", "NIS", ...tanggalList, "Total Hadir", "Total Tidak Hadir"];
+    const rows = [];
+
+    siswaList.forEach(s => {
+      let hadirCount = 0;
+      let tidakHadirCount = 0;
+      const row = [s.nama, s.nis];
+      tanggalList.forEach(tgl => {
+        const absData = data.find(d => d.tanggal === tgl);
+        if (absData) {
+          const siswa = absData.absensi.find(x => x.nis === s.nis);
+          if (siswa) {
+            if (siswa.status === "Hadir") {
+              row.push("H");
+              hadirCount++;
+            } else {
+              let alasanCode = "TH";
+              if (siswa.alasan === "Sakit") alasanCode = "S";
+              else if (siswa.alasan === "Izin") alasanCode = "I";
+              else if (siswa.alasan === "Alfa") alasanCode = "A";
+              row.push(alasanCode);
+              tidakHadirCount++;
+            }
+          } else {
+            row.push("");
+          }
+        } else {
+          row.push("");
+        }
+      });
+      row.push(hadirCount);
+      row.push(tidakHadirCount);
+      rows.push(row);
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+    XLSX.utils.book_append_sheet(wb, ws, "Absensi");
+    XLSX.writeFile(wb, `rekap_${jenis.toLowerCase()}_semester${semester}.xlsx`);
+  }
+
+  // =========================
+
+  window.onload = () => {
+    tampilkanProfil();
+    tampilkanData();
+  }
+</script>
+</body>
+</html>

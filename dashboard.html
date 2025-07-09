@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard Guru</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2962FF;
+      --gray: #f4f7fa;
+      --white: #fff;
+      --dark: #212121;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #acb6e5);
+      color: var(--dark);
+    }
+
+    .navbar {
+      background: var(--white);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 99;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--dark);
+      background: #E3F2FD;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-weight: 600;
+    }
+
+    .nav-links a:hover {
+      background: #BBDEFB;
+    }
+
+    .profile-button img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .profile-button img:hover {
+      transform: scale(1.1);
+    }
+
+    .container {
+      max-width: 850px;
+      margin: 30px auto;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .dashboard-gallery {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .dashboard-item {
+      width: 200px;
+    }
+
+    .dashboard-item img {
+      width: 100%;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      transition: transform 0.3s ease;
+    }
+
+    .dashboard-item img:hover {
+      transform: scale(1.02);
+    }
+
+    .dashboard-item p {
+      margin: 10px 0;
+    }
+
+    .dashboard-item button {
+      background: none;
+      color: #007BFF;
+      border: none;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .modal-content {
+      background: var(--white);
+      padding: 25px;
+      border-radius: var(--radius);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .modal-content img {
+      max-width: 100%;
+      border-radius: var(--radius);
+    }
+
+    .profile-modal-content input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: var(--radius);
+      border: 1px solid #ccc;
+      display: none;
+    }
+
+    .profile-modal-content h3 {
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .profile-modal-content button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      gap: 10px;
+    }
+
+    .btn-save {
+      background: var(--primary);
+      color: white;
+      display: none;
+    }
+
+    .btn-close {
+      background: #ccc;
+    }
+
+    .btn-logout {
+      background: #e53935;
+      color: white;
+    }
+  </style>
+</head>
+<body onload="loadProfile()">
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="nav-links">
+      <a href="absen.html">Absen</a>
+      <a href="lihat_absen.html">Lihat Absen</a>
+    </div>
+    <div class="profile-button" onclick="toggleProfileModal()">
+      <img id="profile-img" src="Logo.jpg" alt="Foto Profil">
+    </div>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div class="container">
+    <h2>Selamat Datang di Dashboard Guru</h2>
+    <div class="dashboard-gallery">
+      <div class="dashboard-item">
+        <img src="Gambar1.jpg" alt="logo">
+        <p>1. Profil<br>2. Absen<br>3. Lihat Absen</p>
+        <button onclick="openImageModal('Gambar1.jpg')">Lihat</button>
+      </div>
+      <div class="dashboard-item">
+        <img src="Gambar5.jpg" alt="logo">
+        <p>Edit Profil: Ubah foto, nama, kelas</p>
+        <button onclick="openImageModal('Gambar5.jpg')">Lihat</button>
+      </div>
+      <div class="dashboard-item">
+        <img src="Gambar2.jpg" alt="logo">
+        <p>Isi Absen<br>Tanggal, Pelajaran, Hadir</p>
+        <button onclick="openImageModal('Gambar2.jpg')">Lihat</button>
+      </div>
+      <div class="dashboard-item">
+        <img src="Gambar3.jpg" alt="logo">
+        <p>Simpan Absensi dan kembali</p>
+        <button onclick="openImageModal('Gambar3.jpg')">Lihat</button>
+      </div>
+      <div class="dashboard-item">
+        <img src="Gambar4.jpg" alt="logo">
+        <p>Lihat Absen: Download, Ubah, Hapus</p>
+        <button onclick="openImageModal('Gambar4.jpg')">Lihat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Image Viewer -->
+  <div id="imageModal" class="modal" onclick="closeImageModal()">
+    <div class="modal-content">
+      <img id="modalImage" src="" alt="Preview">
+      <button onclick="closeImageModal()">Tutup</button>
+    </div>
+  </div>
+
+  <!-- Modal Profile -->
+  <div id="profileModal" class="modal">
+    <div class="modal-content profile-modal-content">
+      <div id="profileInfo">
+        <img id="displayPhoto" src="Logo.jpg" style="width:80px;height:80px;border-radius:50%;border:2px solid #2962FF;"><br><br>
+        <p><strong>Nama:</strong> <span id="modalName">-</span></p>
+        <p><strong>Kelas:</strong> <span id="modalClass">-</span></p>
+        <p><strong>Pelajaran:</strong> <span id="modalSubject">-</span></p>
+        <button onclick="showEditForm()">Ubah</button>
+      </div>
+      <h3>Edit Profil Guru</h3>
+      <input type="file" id="editPhoto" accept="image/*">
+      <input type="text" id="editName" placeholder="Nama">
+      <input type="text" id="editClass" placeholder="Kelas">
+      <input type="text" id="editSubject" placeholder="Pelajaran">
+      <div class="btn-group">
+        <button class="btn-save" onclick="saveProfile()">Simpan</button>
+        <button class="btn-close" onclick="closeProfileModal()">Tutup</button>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script -->
+  <!-- BAGIAN YANG DIUBAH PADA SCRIPT JAVASCRIPT DI BAWAH INI -->
+
+<script>
+  function openImageModal(src) {
+    document.getElementById('modalImage').src = src;
+    document.getElementById('imageModal').style.display = 'flex';
+  }
+
+  function closeImageModal() {
+    document.getElementById('imageModal').style.display = 'none';
+  }
+
+  function toggleProfileModal() {
+    const modal = document.getElementById('profileModal');
+    modal.style.display = 'flex';
+    const data = JSON.parse(localStorage.getItem('profile')) || {};
+    document.getElementById('displayPhoto').src = data.photo || 'Logo.jpg';
+    document.getElementById('modalName').textContent = data.name || '-';
+    document.getElementById('modalClass').textContent = data.kelas || '-';
+    document.getElementById('modalSubject').textContent = data.pelajaran || '-';
+
+    document.getElementById('profileInfo').style.display = 'block';
+    document.querySelectorAll('.profile-modal-content input').forEach(i => i.style.display = 'none');
+    document.querySelector('.btn-save').style.display = 'none';
+    document.querySelector('.profile-modal-content h3').style.display = 'none';
+  }
+
+  function showEditForm() {
+    document.getElementById('profileInfo').style.display = 'none';
+    document.querySelectorAll('.profile-modal-content input').forEach(i => i.style.display = 'block');
+    document.querySelector('.btn-save').style.display = 'inline-block';
+    document.querySelector('.profile-modal-content h3').style.display = 'block';
+  }
+
+  function closeProfileModal() {
+    document.getElementById('profileModal').style.display = 'none';
+  }
+
+  function saveProfile() {
+    const name = document.getElementById('editName').value;
+    const kelas = document.getElementById('editClass').value;
+    const pelajaran = document.getElementById('editSubject').value;
+    const photoInput = document.getElementById('editPhoto');
+
+    const data = { name, kelas, pelajaran };
+
+    if (photoInput.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        data.photo = e.target.result;
+        localStorage.setItem('profile', JSON.stringify(data));
+        loadProfile();
+        closeProfileModal();
+      };
+      reader.readAsDataURL(photoInput.files[0]);
+    } else {
+      const old = JSON.parse(localStorage.getItem('profile')) || {};
+      data.photo = old.photo || 'Logo.jpg';
+      localStorage.setItem('profile', JSON.stringify(data));
+      loadProfile();
+      closeProfileModal();
+    }
+  }
+
+  function loadProfile() {
+    const data = JSON.parse(localStorage.getItem('profile')) || {};
+    document.getElementById('profile-img').src = data.photo || 'Logo.jpg';
+  }
+
+  function logout() {
+    alert("Anda telah logout.");
+    window.location.href = "index.html";
+  }
+</script>
+</body>
+</html>
